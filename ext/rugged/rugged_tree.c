@@ -276,7 +276,7 @@ static VALUE rb_git_tree_diff(VALUE self, VALUE other)
 	owner = rugged_owner(self);
 	Data_Get_Struct(owner, git_repository, repo);
 
-	error = git_diff_tree_to_tree(repo, &opts, tree, other_tree, &diff);
+	error = git_diff_tree_to_tree(&diff, repo, tree, other_tree, &opts);
 	rugged_exception_check(error);
 
 	rdiff = xmalloc(sizeof(rugged_diff));
