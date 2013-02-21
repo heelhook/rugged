@@ -47,7 +47,7 @@ VALUE rugged_diff_hunk_new(VALUE owner, const char *header, size_t header_len, g
   return rb_hunk;
 }
 
-static VALUE rb_git_diff_hunk_each_line(VALUE self)
+/*static VALUE rb_git_diff_hunk_each_line(VALUE self)
 {
   VALUE rb_diff;
   VALUE rb_hunk;
@@ -93,11 +93,12 @@ static VALUE rb_git_diff_hunk_line_count(VALUE self)
 
   return INT2FIX(num_lines);
 }
+*/
 
 void Init_rugged_diff_hunk()
 {
   rb_cRuggedDiffHunk = rb_define_class_under(rb_cRuggedDiff, "Hunk", rb_cObject);
 
-  rb_define_method(rb_cRuggedDiffHunk, "each_line", rb_git_diff_hunk_each_line, 0);
-  rb_define_method(rb_cRuggedDiffHunk, "line_count", rb_git_diff_hunk_line_count, 0);
+  /*rb_define_method(rb_cRuggedDiffHunk, "each_line", rb_git_diff_hunk_each_line, 0);
+  rb_define_method(rb_cRuggedDiffHunk, "line_count", rb_git_diff_hunk_line_count, 0);*/
 }
