@@ -1,7 +1,7 @@
 # Rugged
 **libgit2 bindings in Ruby**
 
-Rugged is a library for accessing libgit2 in Ruby. It gives you the speed and
+Rugged is a library for accessing [libgit2](https://github.com/libgit2/libgit2) in Ruby. It gives you the speed and
 portability of libgit2 with the beauty of the Ruby language.
 
 ### libgit2
@@ -114,7 +114,24 @@ sha = repo.write(content, type)
 ```
 
 You can also use the `Commit` object directly to craft a commit; this is a bit
-more high-level, so it may be preferable.
+more high-level, so it may be preferable:
+
+```ruby
+oid = rugged.write("This is a blob.", :blob)
+index = Rugged::Index.new
+index.add(:path => "README.md", :oid => oid, :mode => 0100644)
+
+options = {}
+options[:tree] = index.write_tree(rugged)
+
+options[:author] = { :email => "testuser@github.com", :name => 'Test Author', :time => Time.now }
+options[:committer] = { :email => "testuser@github.com", :name => 'Test Author', :time => Time.now }
+options[:message] ||= "Making a commit via Rugged!"
+options[:parents] = rugged.empty? ? [] : [ rugged.head.target ].compact
+options[:update_ref] = 'HEAD'
+
+Rugged::Commit.create(rugged, options)
+```
 
 ---
 
@@ -126,7 +143,7 @@ these methods should be useful in their derived classes.
 ```ruby
 obj = repo.lookup(sha)
 obj.oid  # object sha
-obj.type [OBJ_COMMIT, OBJ_TREE, OBJ_BLOB, OBJ_TAG]
+obj.type # One of :commit, :tree, :blob or :tag
 
 robj = obj.read_raw
 str  = robj.data
@@ -168,7 +185,8 @@ Rugged::Commit.create(r,
 	:message => "Hello world\n\n",
 	:committer => author,
 	:parents => ["2cb831a8aea28b2c1b9c63385585b864e4d3bad1"],
-	:tree => some_tree) #=> "f148106ca58764adc93ad4e2d6b1d168422b9796"
+	:tree => some_tree,
+	:update_ref => "HEAD") #=> "f148106ca58764adc93ad4e2d6b1d168422b9796"
 ```
 
 ### Tag Objects
@@ -216,14 +234,20 @@ tree.each_blob { |entry| puts entry[:name] }  # list only files
 You can also write trees with the `TreeBuilder`:
 
 ```ruby
-entry = {:type => :blob,
-         :name => "README.txt",
-         :oid  => "1385f264afb75a56a5bec74243be9b367ba4ca08",
-         :filemode => 33188}
-
+oid = rugged.write("This is a blob.", :blob)
 builder = Rugged::Tree::Builder.new
-builder << entry
-sha = builder.write(repo)
+builder << { :type => :blob, :name => "README.md", :oid => oid, :filemode => 0100644 }
+
+options = {}
+options[:tree] = builder.write(rugged)
+
+options[:author] = { :email => "testuser@github.com", :name => 'Test Author', :time => Time.now }
+options[:committer] = { :email => "testuser@github.com", :name => 'Test Author', :time => Time.now }
+options[:message] ||= "Making a commit via Rugged!"
+options[:parents] = rugged.empty? ? [] : [ rugged.head.target ].compact
+options[:update_ref] = 'HEAD'
+
+Rugged::Commit.create(rugged, options)
 ```
 
 ---
@@ -287,7 +311,7 @@ index.add(path)
 
 ### Refs
 
-The `RefList` class allows you to list, create and delete packed and loose refs.
+The `Rugged::Reference` class allows you to list, create and delete packed and loose refs.
 
 ```ruby
 ref = repo.head # or...
@@ -339,6 +363,48 @@ prsn  = entry[:committer]
 
 ---
 
+### Branches
+
+`Rugged::Branch` will help you with all of your branch-related needs.
+
+Iterate over all branches:
+
+```ruby
+Rugged::Branch.each_name(repo).sort
+# => ["master", "origin/HEAD", "origin/master", "origin/packed"]
+
+Rugged::Branch.each_name(repo, :local).sort
+# => ["master"]
+
+Rugged::Branch.each_name(repo, :remote).sort
+# => ["origin/HEAD", "origin/master", "origin/packed"]
+```
+
+Look up branches and get attributes:
+
+```ruby
+branch = Rugged::Branch.lookup(@repo, "master")
+branch.name # => 'master'
+branch.canonical_name # => 'refs/heads/master'
+```
+
+Look up the oid for the tip of a branch:
+
+```ruby
+Rugged::Branch.lookup(@repo, "master").tip.oid
+# => "36060c58702ed4c2a40832c51758d5344201d89a"
+```
+
+Creation and deletion:
+
+```ruby
+branch = repo.create_branch("test_branch")
+branch.move("new_branch")
+branch.delete!
+```
+
+---
+
 ### Config files
 
 It's also easy to read and manipulate the Git config file data with Rugged.
@@ -380,16 +446,7 @@ for the topic), send a pull request.
 
 ## Development
 
-First you need to install libgit2:
-
-    $ git clone https://github.com/libgit2/libgit2.git
-    $ cd libgit2
-    $ mkdir build && cd build
-    $ cmake ..
-    $ make
-    $ make install
-
-Now that those are installed, you can install Rugged:
+Simply clone and install:
 
     $ git clone https://github.com/libgit2/rugged.git
     $ cd rugged

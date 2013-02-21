@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011 GitHub, Inc
+ * Copyright (c) 2013 GitHub, Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -198,10 +198,10 @@ static VALUE rb_git_ref_create(int argc, VALUE *argv, VALUE klass)
 		force = rugged_parse_bool(rb_force);
 
 	if (git_oid_fromstr(&oid, StringValueCStr(rb_target)) == GIT_OK) {
-		error = git_reference_create_oid(
+		error = git_reference_create(
 			&ref, repo, StringValueCStr(rb_name), &oid, force);
 	} else {
-		error = git_reference_create_symbolic(
+		error = git_reference_symbolic_create(
 			&ref, repo, StringValueCStr(rb_name), RSTRING_PTR(rb_target), force);
 	}
 
@@ -231,9 +231,9 @@ static VALUE rb_git_ref_target(VALUE self)
 	RUGGED_UNPACK_REFERENCE(self, ref);
 
 	if (git_reference_type(ref) == GIT_REF_OID) {
-		return rugged_create_oid(git_reference_oid(ref));
+		return rugged_create_oid(git_reference_target(ref));
 	} else {
-		return rugged_str_new2(git_reference_target(ref), rb_utf8_encoding());
+		return rugged_str_new2(git_reference_symbolic_target(ref), rb_utf8_encoding());
 	}
 }
 
@@ -267,9 +267,9 @@ static VALUE rb_git_ref_set_target(VALUE self, VALUE rb_target)
 		error = git_oid_fromstr(&target, StringValueCStr(rb_target));
 		rugged_exception_check(error);
 
-		error = git_reference_set_oid(ref, &target);
+		error = git_reference_set_target(ref, &target);
 	} else {
-		error = git_reference_set_target(ref, StringValueCStr(rb_target));
+		error = git_reference_symbolic_set_target(ref, StringValueCStr(rb_target));
 	}
 
 	rugged_exception_check(error);
@@ -433,15 +433,16 @@ static VALUE rb_git_ref_delete(VALUE self)
 static VALUE reflog_entry_new(const git_reflog_entry *entry)
 {
 	VALUE rb_entry = rb_hash_new();
+	const char *message;
 
 	rb_hash_aset(rb_entry,
-		CSTR2SYM("oid_old"),
-		rugged_create_oid(git_reflog_entry_oidold(entry))
+		CSTR2SYM("id_old"),
+		rugged_create_oid(git_reflog_entry_id_old(entry))
 	);
 
 	rb_hash_aset(rb_entry,
-		CSTR2SYM("oid_new"),
-		rugged_create_oid(git_reflog_entry_oidnew(entry))
+		CSTR2SYM("id_new"),
+		rugged_create_oid(git_reflog_entry_id_new(entry))
 	);
 
 	rb_hash_aset(rb_entry,
@@ -449,10 +450,10 @@ static VALUE reflog_entry_new(const git_reflog_entry *entry)
 		rugged_signature_new(git_reflog_entry_committer(entry), NULL)
 	);
 
-	if (git_reflog_entry_msg(entry) != NULL) {
+	if ((message = git_reflog_entry_message(entry)) != NULL) {
 		rb_hash_aset(rb_entry,
 			CSTR2SYM("message"),
-			rugged_str_new2(git_reflog_entry_msg(entry), NULL)
+			rugged_str_new2(message, NULL)
 		);
 	}
 
@@ -467,15 +468,15 @@ static VALUE reflog_entry_new(const git_reflog_entry *entry)
  *
  *	Each +reflog_entry+ is a hash with the following keys:
  *
- *	- +:oid_old+: previous OID before the change
- *	- +:oid_new+: OID after the change
+ *	- +:id_old+: previous OID before the change
+ *	- +:id_new+: OID after the change
  *	- +:committer+: author of the change
  *	- +:message+: message for the change
  *
  *		reference.log #=> [
  *		# {
- *		#	:oid_old => nil,
- *		#	:oid_new => '9d09060c850defbc7711d08b57def0d14e742f4e',
+ *		#	:id_old => nil,
+ *		#	:id_new => '9d09060c850defbc7711d08b57def0d14e742f4e',
  *		#	:committer => {:name => 'Vicent Marti', :email => {'vicent@github.com'}},
  *		#	:message => 'created reference'
  *		# }, ... ]
@@ -486,7 +487,7 @@ static VALUE rb_git_reflog(VALUE self)
 	git_reference *ref;
 	int error;
 	VALUE rb_log;
-	unsigned int i, ref_count;
+	size_t i, ref_count;
 
 	RUGGED_UNPACK_REFERENCE(self, ref);
 
@@ -498,7 +499,7 @@ static VALUE rb_git_reflog(VALUE self)
 
 	for (i = 0; i < ref_count; ++i) {
 		const git_reflog_entry *entry =
-			git_reflog_entry_byindex(reflog, i);
+			git_reflog_entry_byindex(reflog, ref_count - i - 1);
 
 		rb_ary_push(rb_log, reflog_entry_new(entry));
 	}
@@ -523,8 +524,6 @@ static VALUE rb_git_reflog_write(int argc, VALUE *argv, VALUE self)
 
 	git_signature *committer;
 	const char *message = NULL;
-	
-	git_oid oid;
 
 	RUGGED_UNPACK_REFERENCE(self, ref);
 
@@ -540,7 +539,7 @@ static VALUE rb_git_reflog_write(int argc, VALUE *argv, VALUE self)
 
 	committer = rugged_signature_get(rb_committer);
 
-	error = git_reflog_append(reflog, git_reference_oid(ref), committer, message);
+	error = git_reflog_append(reflog, git_reference_target(ref), committer, message);
 	rugged_exception_check(error);
 
 	error = git_reflog_write(reflog);

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011 GitHub, Inc
+ * Copyright (c) 2013 GitHub, Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -68,6 +68,7 @@ static VALUE rb_git_treeentry_fromC(const git_tree_entry *entry)
 /*
  * Rugged Tree
  */
+
 /*
  *	call-seq:
  *		tree.count -> count
@@ -120,6 +121,33 @@ static VALUE rb_git_tree_get_entry(VALUE self, VALUE entry_id)
 
 /*
  *	call-seq:
+ *		tree.get_entry_by_oid(rb_oid) -> entry
+ *
+ *	Return one of the entries from a tree as a +Hash+, based off the oid SHA.
+ *	
+ *	If the entry doesn't exist, +nil+ will be returned.
+ *
+ *	This does a full traversal of the every element in the tree, so this method
+ *	is not especially fast.
+ *
+ *		tree.get_entry_by_oid("d8786bfc97485e8d7b19b21fb88c8ef1f199fc3f") 
+ *		#=> {:name => "foo.txt", :type => :blob, :oid => "d8786bfc97485e8d7b19b21fb88c8ef1f199fc3f", :filemode => 0}
+ *
+ */
+static VALUE rb_git_tree_get_entry_by_oid(VALUE self, VALUE rb_oid)
+{
+	git_tree *tree;
+	git_oid oid;
+	Data_Get_Struct(self, git_tree, tree);
+
+	Check_Type(rb_oid, T_STRING);
+	rugged_exception_check(git_oid_fromstr(&oid, StringValueCStr(rb_oid)));
+
+	return rb_git_treeentry_fromC(git_tree_entry_byoid(tree, &oid));
+}
+
+/*
+ *	call-seq:
  *		tree.each { |entry| block }
  *		tree.each -> Iterator
  *
@@ -140,7 +168,7 @@ static VALUE rb_git_tree_get_entry(VALUE self, VALUE entry_id)
 static VALUE rb_git_tree_each(VALUE self)
 {
 	git_tree *tree;
-	unsigned int i, count;
+	size_t i, count;
 	Data_Get_Struct(self, git_tree, tree);
 
 	if (!rb_block_given_p())
@@ -207,9 +235,9 @@ static VALUE rb_git_tree_walk(VALUE self, VALUE rb_mode)
 		mode = GIT_TREEWALK_POST;
 	else
 		rb_raise(rb_eTypeError,
-			"Invalid iteration mode. Expected `:preorder` or `:postorder`");
+				"Invalid iteration mode. Expected `:preorder` or `:postorder`");
 
-	error = git_tree_walk(tree, &rugged__treewalk_cb, mode, (void *)rb_block_proc());
+	error = git_tree_walk(tree, mode, &rugged__treewalk_cb, (void *)rb_block_proc());
 	rugged_exception_check(error);
 
 	return Qnil;
@@ -217,20 +245,20 @@ static VALUE rb_git_tree_walk(VALUE self, VALUE rb_mode)
 
 static VALUE rb_git_tree_path(VALUE self, VALUE rb_path)
 {
-  int error;
-  git_tree *tree;
-  git_tree_entry *entry;
-  VALUE rb_entry;
-  Data_Get_Struct(self, git_tree, tree);
-  Check_Type(rb_path, T_STRING);
+	int error;
+	git_tree *tree;
+	git_tree_entry *entry;
+	VALUE rb_entry;
+	Data_Get_Struct(self, git_tree, tree);
+	Check_Type(rb_path, T_STRING);
 
-  error = git_tree_entry_bypath(&entry, tree, StringValueCStr(rb_path));
-  rugged_exception_check(error);
+	error = git_tree_entry_bypath(&entry, tree, StringValueCStr(rb_path));
+	rugged_exception_check(error);
 
-  rb_entry = rb_git_treeentry_fromC(entry);
-  git_tree_entry_free(entry);
+	rb_entry = rb_git_treeentry_fromC(entry);
+	git_tree_entry_free(entry);
 
-  return rb_entry;
+	return rb_entry;
 }
 
 static VALUE rb_git_tree_diff(VALUE self, VALUE other)
@@ -397,6 +425,7 @@ void Init_rugged_tree()
 	rb_define_method(rb_cRuggedTree, "count", rb_git_tree_entrycount, 0);
 	rb_define_method(rb_cRuggedTree, "length", rb_git_tree_entrycount, 0);
 	rb_define_method(rb_cRuggedTree, "get_entry", rb_git_tree_get_entry, 1);
+	rb_define_method(rb_cRuggedTree, "get_entry_by_oid", rb_git_tree_get_entry_by_oid, 1);
 	rb_define_method(rb_cRuggedTree, "path", rb_git_tree_path, 1);
 	rb_define_method(rb_cRuggedTree, "diff", rb_git_tree_diff, 1);
 	rb_define_method(rb_cRuggedTree, "[]", rb_git_tree_get_entry, 1);

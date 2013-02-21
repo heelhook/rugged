@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011 GitHub, Inc
+ * Copyright (c) 2013 GitHub, Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,6 +66,8 @@ void Init_rugged_diff();
 void Init_rugged_diff_delta();
 void Init_rugged_diff_hunk();
 void Init_rugged_diff_line();
+void Init_rugged_notes();
+void Init_rugged_settings();
 
 VALUE rb_git_object_init(git_otype type, int argc, VALUE *argv, VALUE self);
 
@@ -86,7 +88,8 @@ VALUE rugged_otype_new(git_otype t);
 git_otype rugged_otype_get(VALUE rb_type);
 
 git_signature *rugged_signature_get(VALUE rb_person);
-git_object *rugged_object_load(git_repository *repo, VALUE object_value, git_otype type);
+git_object *rugged_object_get(git_repository *repo, VALUE object_value, git_otype type);
+void rugged_oid_get(git_oid *oid, git_repository *repo, VALUE p);
 
 static inline void rugged_set_owner(VALUE object, VALUE owner)
 {
@@ -112,6 +115,14 @@ static inline int rugged_parse_bool(VALUE boolean)
 		rb_raise(rb_eTypeError, "Expected boolean value");
 
 	return boolean ? 1 : 0;
+}
+
+extern VALUE rb_cRuggedRepo;
+
+static inline void rugged_check_repo(VALUE rb_repo)
+{
+	if (!rb_obj_is_instance_of(rb_repo, rb_cRuggedRepo))
+		rb_raise(rb_eTypeError, "Expecting a Rugged Repository");
 }
 
 /* support for string encodings in 1.9 */

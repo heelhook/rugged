@@ -1,12 +1,9 @@
 require "test_helper"
 
-context "Rugged::Tag tests" do
-  setup do
-    @path = File.dirname(__FILE__) + '/fixtures/testrepo.git/'
-    @repo = Rugged::Repository.new(@path)
-  end
+class TagTest < Rugged::TestCase
+  include Rugged::RepositoryAccess
 
-  test "can read the tag data" do
+  def test_reading_a_tag
     oid = "0c37a5391bbff43c37f0d0371823a5509eed5b1d"
     obj = @repo.lookup(oid)
 
@@ -22,7 +19,7 @@ context "Rugged::Tag tests" do
     assert_equal "schacon@gmail.com", c[:email]
   end
 
-  test "can read the tag oid only" do
+  def test_reading_the_oid_of_a_tag
     oid = "0c37a5391bbff43c37f0d0371823a5509eed5b1d"
     obj = @repo.lookup(oid)
 
