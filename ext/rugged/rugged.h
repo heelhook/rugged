@@ -79,7 +79,7 @@ VALUE rugged_object_new(VALUE owner, git_object *object);
 VALUE rugged_config_new(VALUE klass, VALUE owner, git_config *cfg);
 VALUE rugged_ref_new(VALUE klass, VALUE owner, git_reference *ref);
 VALUE rugged_diff_new(VALUE klass, VALUE owner, rugged_diff *diff);
-VALUE rugged_diff_delta_new(VALUE owner, git_diff_delta *delta);
+VALUE rugged_diff_delta_new(VALUE owner, const git_diff_delta *delta);
 VALUE rugged_diff_hunk_new(VALUE owner, const char *header, size_t header_len, git_diff_range *range);
 VALUE rugged_diff_line_new(VALUE owner, const char line_origin, const char *content, size_t content_len);
 

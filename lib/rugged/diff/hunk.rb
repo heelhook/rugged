@@ -2,10 +2,10 @@ module Rugged
   class Diff
     class Hunk
       include Enumerable
-      alias each each_line
+      #alias each each_line
 
-      alias size line_count
-      alias count line_count
+      #alias size line_count
+      #alias count line_count
 
       attr_accessor :header
 
@@ -18,9 +18,11 @@ module Rugged
         "#<#{self.class.name}:#{object_id} {header: #{header.inspect}, range: #{range.inspect}>"
       end
 
+=begin
       def lines
         Enumerator.new(self, :each_line)
       end
+=end
     end
   end
 end

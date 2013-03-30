@@ -264,7 +264,7 @@ static VALUE rb_git_tree_path(VALUE self, VALUE rb_path)
 static VALUE rb_git_tree_diff(VALUE self, VALUE other)
 {
 	git_tree *tree, *other_tree;
-	git_diff_options opts = {0};
+	// git_diff_options opts = {0}; // testing will NULL for now
 	git_repository *repo;
 	git_diff_list *diff;
 	rugged_diff *rdiff;
@@ -276,7 +276,7 @@ static VALUE rb_git_tree_diff(VALUE self, VALUE other)
 	owner = rugged_owner(self);
 	Data_Get_Struct(owner, git_repository, repo);
 
-	error = git_diff_tree_to_tree(&diff, repo, tree, other_tree, &opts);
+	error = git_diff_tree_to_tree(&diff, repo, tree, other_tree, NULL);
 	rugged_exception_check(error);
 
 	rdiff = xmalloc(sizeof(rugged_diff));

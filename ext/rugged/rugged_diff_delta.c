@@ -27,11 +27,11 @@
 extern VALUE rb_cRuggedDiff;
 VALUE rb_cRuggedDiffDelta;
 
-VALUE rugged_diff_delta_new(VALUE owner, git_diff_delta *delta)
+VALUE rugged_diff_delta_new(VALUE owner, const git_diff_delta *delta)
 {
   VALUE rb_delta;
 
-  rb_delta = Data_Wrap_Struct(rb_cRuggedDiffDelta, NULL, NULL, delta);
+  rb_delta = Data_Wrap_Struct(rb_cRuggedDiffDelta, NULL, NULL, (void *)delta);
   rugged_set_owner(rb_delta, owner);
   return rb_delta;
 }

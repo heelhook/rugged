@@ -30,9 +30,6 @@ VALUE rb_cRuggedDiff;
 
 static void rb_git_diff__free(rugged_diff *diff)
 {
-  //if (diff->iter)
-  //  git_diff_iterator_free(diff->iter);
-
   git_diff_list_free(diff->diff);
   xfree(diff);
 }
@@ -61,6 +58,7 @@ static int diff_print_cb(
 
   return 0;
 }
+
 
 /*
  *  call-seq:
@@ -157,32 +155,31 @@ static VALUE rb_git_diff_merge(VALUE self, VALUE rb_other)
   return self;
 }
 
-/*static VALUE rb_git_diff_each_delta(VALUE self)
+static int delta_cb(
+  const git_diff_delta *delta,
+  float progress,
+  void *data)
+{
+  rb_yield(rugged_diff_delta_new((VALUE) data, delta));
+
+  // Error checking goes here?
+  return 0;
+}
+
+static VALUE rb_git_diff_each_delta(VALUE self)
 {
   rugged_diff *diff;
-  int err = 0;
   git_diff_delta *delta;
 
   Data_Get_Struct(self, rugged_diff, diff);
 
-  //if (diff->iter != NULL)
-  //  git_diff_iterator_free(diff->iter);
+  //rugged_exception_check(err);
 
-  //err = git_diff_iterator_new(&diff->iter, diff->diff);
-  rugged_exception_check(err);
-
-  while (err != GIT_ITEROVER) {
-    err = git_diff_iterator_next_file(&delta, diff->iter);
-    if (err == GIT_ITEROVER)
-      break;
-    else
-      rugged_exception_check(err);
-
-    rb_yield(rugged_diff_delta_new(self, delta));
-  }
+  // Use the git_diff_foreach?
+  git_diff_foreach(diff->diff, delta_cb, NULL, NULL, &self);
 
   return Qnil;
-}*/
+}
 
 void Init_rugged_diff()
 {
@@ -191,5 +188,5 @@ void Init_rugged_diff()
   rb_define_method(rb_cRuggedDiff, "patch", rb_git_diff_patch_GET, -1);
   rb_define_method(rb_cRuggedDiff, "write_patch", rb_git_diff_write_patch, -1);
   rb_define_method(rb_cRuggedDiff, "merge!", rb_git_diff_merge, 1);
-  //rb_define_method(rb_cRuggedDiff, "each_delta", rb_git_diff_each_delta, 0);
+  rb_define_method(rb_cRuggedDiff, "each_delta", rb_git_diff_each_delta, 0);
 }
