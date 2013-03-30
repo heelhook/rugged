@@ -5,10 +5,10 @@ require 'rugged/diff/line'
 module Rugged
   class Diff
     include Enumerable
-    alias each each_delta
+    #alias each each_delta
 
-    def deltas
-      Enumerator.new(self, :each_delta)
-    end
+    #def deltas
+      #Enumerator.new(self, :each_delta)
+    #end
   end
 end

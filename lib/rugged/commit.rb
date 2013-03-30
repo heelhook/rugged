@@ -6,7 +6,7 @@ module Rugged
     end
 
     def inspect
-      "#<Rugged::Commit:#{object_id} {message: #{message.inspect}, tree: #{tree.inspect}, parents: #{parent_ids}>"
+      "#<Rugged::Commit:#{object_id} {message: #{message.inspect}, tree: #{tree.inspect}, parents: #{parent_oids}>"
     end
 
     def diff(other)
@@ -35,9 +35,10 @@ module Rugged
       }
     end
 
-    def parent_ids
-      parents.map { |parent| parent.oid }
-    end
+    # Should i have removed this?
+    #def parent_ids
+    #  parents.map { |parent| parent.oid }
+    #end
 
     def modify(new_args, update_ref=nil)
       args = self.to_hash.merge(new_args)

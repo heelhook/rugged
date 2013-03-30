@@ -27,11 +27,11 @@
 extern VALUE rb_cRuggedDiff;
 VALUE rb_cRuggedDiffDelta;
 
-VALUE rugged_diff_delta_new(VALUE owner, git_diff_delta *delta)
+VALUE rugged_diff_delta_new(VALUE owner, const git_diff_delta *delta)
 {
   VALUE rb_delta;
 
-  rb_delta = Data_Wrap_Struct(rb_cRuggedDiffDelta, NULL, NULL, delta);
+  rb_delta = Data_Wrap_Struct(rb_cRuggedDiffDelta, NULL, NULL, (void *)delta);
   rugged_set_owner(rb_delta, owner);
   return rb_delta;
 }
@@ -133,7 +133,7 @@ static VALUE rb_git_diff_delta_each_hunk(VALUE self)
   rb_diff = rugged_owner(self);
   Data_Get_Struct(rb_diff, rugged_diff, diff);
 
-  while (err != GIT_ITEROVER) {
+  /*while (err != GIT_ITEROVER) {
     err = git_diff_iterator_next_hunk(&range, &header, &header_len, diff->iter);
     if (err == GIT_ITEROVER)
       break;
@@ -142,7 +142,7 @@ static VALUE rb_git_diff_delta_each_hunk(VALUE self)
 
     rb_hunk = rugged_diff_hunk_new(self, header, header_len, range);
     rb_yield(rb_hunk);
-  }
+  }*/
 
   return Qnil;
 }
@@ -157,7 +157,7 @@ static VALUE rb_git_diff_delta_hunk_count(VALUE self)
   rb_diff = rugged_owner(self);
   Data_Get_Struct(rb_diff, rugged_diff, diff);
 
-  num_hunks = git_diff_iterator_num_hunks_in_file(diff->iter);
+  //num_hunks = git_diff_iterator_num_hunks_in_file(diff->iter);
   rugged_exception_check(num_hunks);
 
   return INT2FIX(num_hunks);

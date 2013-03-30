@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011 GitHub, Inc
+ * Copyright (c) 2013 GitHub, Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,7 +59,7 @@ static VALUE rb_git_config_new(VALUE klass, VALUE rb_path)
 		for (i = 0; i < RARRAY_LEN(rb_path); ++i) {
 			VALUE f = rb_ary_entry(rb_path, i);
 			Check_Type(f, T_STRING);
-			error = git_config_add_file_ondisk(config, StringValueCStr(f), i + 1);
+			error = git_config_add_file_ondisk(config, StringValueCStr(f), i + 1, 1);
 			rugged_exception_check(error);
 		}
 	} else if (TYPE(rb_path) == T_STRING) {
@@ -170,7 +170,7 @@ static VALUE rb_git_config_delete(VALUE self, VALUE rb_key)
 	Data_Get_Struct(self, git_config, config);
 	Check_Type(rb_key, T_STRING);
 
-	error = git_config_delete(config, StringValueCStr(rb_key));
+	error = git_config_delete_entry(config, StringValueCStr(rb_key));
 	if (error == GIT_ENOTFOUND)
 		return Qfalse;
 
@@ -178,26 +178,26 @@ static VALUE rb_git_config_delete(VALUE self, VALUE rb_key)
 	return Qtrue;
 }
 
-static int cb_config__each_key(const char *key, const char *value, void *opaque)
+static int cb_config__each_key(const git_config_entry *entry, void *opaque)
 {
-	rb_funcall((VALUE)opaque, rb_intern("call"), 1, rugged_str_new2(key, NULL));
+	rb_funcall((VALUE)opaque, rb_intern("call"), 1, rugged_str_new2(entry->name, NULL));
 	return GIT_OK;
 }
 
-static int cb_config__each_pair(const char *key, const char *value, void *opaque)
+static int cb_config__each_pair(const git_config_entry *entry, void *opaque)
 {
 	rb_funcall((VALUE)opaque, rb_intern("call"), 2,
-		rugged_str_new2(key, NULL),
-		rugged_str_new2(value, NULL));
+		rugged_str_new2(entry->name, NULL),
+		rugged_str_new2(entry->value, NULL));
 
 	return GIT_OK;
 }
 
-static int cb_config__to_hash(const char *key, const char *value, void *opaque)
+static int cb_config__to_hash(const git_config_entry *entry, void *opaque)
 {
 	rb_hash_aset((VALUE)opaque,
-		rugged_str_new2(key, NULL),
-		rugged_str_new2(value, NULL));
+		rugged_str_new2(entry->name, NULL),
+		rugged_str_new2(entry->value, NULL));
 
 	return GIT_OK;
 }

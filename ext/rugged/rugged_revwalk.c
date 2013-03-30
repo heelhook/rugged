@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2011 GitHub, Inc
+ * Copyright (c) 2013 GitHub, Inc
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -135,7 +135,7 @@ static VALUE rb_git_walker_push(VALUE self, VALUE rb_commit)
 
 	Data_Get_Struct(self, git_revwalk, walk);
 
-	commit = (git_commit *)rugged_object_load(
+	commit = (git_commit *)rugged_object_get(
 		git_revwalk_repository(walk), rb_commit, GIT_OBJ_COMMIT);
 
 	git_revwalk_push(walk, git_object_id((git_object *)commit));
@@ -154,7 +154,7 @@ static VALUE rb_git_walker_hide(VALUE self, VALUE rb_commit)
 
 	Data_Get_Struct(self, git_revwalk, walk);
 
-	commit = (git_commit *)rugged_object_load(
+	commit = (git_commit *)rugged_object_get(
 		git_revwalk_repository(walk), rb_commit, GIT_OBJ_COMMIT);
 
 	git_revwalk_hide(walk, git_object_id((git_object *)commit));
