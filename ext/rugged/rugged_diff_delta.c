@@ -27,7 +27,7 @@
 extern VALUE rb_cRuggedDiff;
 VALUE rb_cRuggedDiffDelta;
 
-VALUE rugged_diff_delta_new(VALUE owner, git_diff_delta *delta)
+VALUE rugged_diff_delta_new(VALUE owner, const git_diff_delta *delta)
 {
   VALUE rb_delta;
 
