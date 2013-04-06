@@ -44,7 +44,6 @@
 
 typedef struct {
 	git_diff_list *diff;
-	git_diff_iterator *iter;
 } rugged_diff;
 
 /*

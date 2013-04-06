@@ -120,7 +120,7 @@ static VALUE rb_git_diff_delta_binary(VALUE self)
   return delta->binary ? Qtrue : Qfalse;
 }
 
-static VALUE rb_git_diff_delta_each_hunk(VALUE self)
+/*static VALUE rb_git_diff_delta_each_hunk(VALUE self)
 {
   VALUE rb_diff;
   VALUE rb_hunk;
@@ -157,11 +157,12 @@ static VALUE rb_git_diff_delta_hunk_count(VALUE self)
   rb_diff = rugged_owner(self);
   Data_Get_Struct(rb_diff, rugged_diff, diff);
 
-  num_hunks = git_diff_iterator_num_hunks_in_file(diff->iter);
+  //num_hunks = git_diff_iterator_num_hunks_in_file(diff->iter);
   rugged_exception_check(num_hunks);
 
   return INT2FIX(num_hunks);
 }
+*/
 
 void Init_rugged_diff_delta()
 {
@@ -172,6 +173,6 @@ void Init_rugged_diff_delta()
   rb_define_method(rb_cRuggedDiffDelta, "similarity", rb_git_diff_delta_similarity, 0);
   rb_define_method(rb_cRuggedDiffDelta, "status", rb_git_diff_delta_status, 0);
   rb_define_method(rb_cRuggedDiffDelta, "binary", rb_git_diff_delta_binary, 0);
-  rb_define_method(rb_cRuggedDiffDelta, "hunk_count", rb_git_diff_delta_hunk_count, 0);
-  rb_define_method(rb_cRuggedDiffDelta, "each_hunk", rb_git_diff_delta_each_hunk, 0);
+  //rb_define_method(rb_cRuggedDiffDelta, "hunk_count", rb_git_diff_delta_hunk_count, 0);
+  //rb_define_method(rb_cRuggedDiffDelta, "each_hunk", rb_git_diff_delta_each_hunk, 0);
 }

@@ -30,9 +30,6 @@ VALUE rb_cRuggedDiff;
 
 static void rb_git_diff__free(rugged_diff *diff)
 {
-  if (diff->iter)
-    git_diff_iterator_free(diff->iter);
-
   git_diff_list_free(diff->diff);
   xfree(diff);
 }
@@ -43,7 +40,6 @@ VALUE rugged_diff_new(VALUE klass, VALUE owner, rugged_diff *diff)
 
   rb_diff = Data_Wrap_Struct(klass, NULL, rb_git_diff__free, diff);
   rugged_set_owner(rb_diff, owner);
-  diff->iter = NULL;
   return rb_diff;
 }
 
@@ -147,7 +143,7 @@ static VALUE rb_git_diff_merge(VALUE self, VALUE rb_other)
   return self;
 }
 
-static VALUE rb_git_diff_each_delta(VALUE self)
+/*static VALUE rb_git_diff_each_delta(VALUE self)
 {
   rugged_diff *diff;
   int err = 0;
@@ -172,7 +168,7 @@ static VALUE rb_git_diff_each_delta(VALUE self)
   }
 
   return Qnil;
-}
+}*/
 
 void Init_rugged_diff()
 {
@@ -181,5 +177,5 @@ void Init_rugged_diff()
   rb_define_method(rb_cRuggedDiff, "patch", rb_git_diff_patch_GET, -1);
   rb_define_method(rb_cRuggedDiff, "write_patch", rb_git_diff_write_patch, -1);
   rb_define_method(rb_cRuggedDiff, "merge!", rb_git_diff_merge, 1);
-  rb_define_method(rb_cRuggedDiff, "each_delta", rb_git_diff_each_delta, 0);
+  //rb_define_method(rb_cRuggedDiff, "each_delta", rb_git_diff_each_delta, 0);
 }
