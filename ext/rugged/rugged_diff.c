@@ -43,8 +43,13 @@ VALUE rugged_diff_new(VALUE klass, VALUE owner, rugged_diff *diff)
   return rb_diff;
 }
 
-static int diff_print_cb(void *data, git_diff_delta *delta, git_diff_range *range, char usage,
-        const char *line, size_t line_len)
+static int diff_print_cb(
+    const git_diff_delta *delta,
+    const git_diff_range *range,
+    char usage,
+    const char *line,
+    size_t line_len,
+    void *data)
 {
   VALUE *str = data;
 
@@ -75,18 +80,23 @@ static VALUE rb_git_diff_patch_GET(int argc, VALUE *argv, VALUE self)
   if (!NIL_P(rb_opts)) {
     Check_Type(rb_opts, T_HASH);
     if (rb_hash_aref(rb_opts, CSTR2SYM("compact")) == Qtrue)
-      git_diff_print_compact(diff->diff, &str, diff_print_cb);
+      git_diff_print_compact(diff->diff, diff_print_cb, &str);
     else
-      git_diff_print_patch(diff->diff, &str, diff_print_cb);
+      git_diff_print_patch(diff->diff, diff_print_cb, &str);
   } else {
-    git_diff_print_patch(diff->diff, &str, diff_print_cb);
+    git_diff_print_patch(diff->diff, diff_print_cb, &str);
   }
 
   return str;
 }
 
-static int diff_write_cb(void *data, git_diff_delta *delta, git_diff_range *range, char usage,
-        const char *line, size_t line_len)
+static int diff_write_cb(
+    const git_diff_delta *delta,
+    const git_diff_range *range,
+    char usage,
+    const char *line,
+    size_t line_len,
+    void *data)
 {
   VALUE *io = data;
   VALUE str;
@@ -120,11 +130,11 @@ static VALUE rb_git_diff_write_patch(int argc, VALUE *argv, VALUE self)
   if (!NIL_P(rb_opts)) {
     Check_Type(rb_opts, T_HASH);
     if (rb_hash_aref(rb_opts, CSTR2SYM("compact")) == Qtrue)
-      git_diff_print_compact(diff->diff, &rb_io, diff_write_cb);
+      git_diff_print_compact(diff->diff, diff_write_cb, &rb_io);
     else
-      git_diff_print_patch(diff->diff, &rb_io, diff_write_cb);
+      git_diff_print_patch(diff->diff, diff_write_cb, &rb_io);
   } else {
-    git_diff_print_patch(diff->diff, &rb_io, diff_write_cb);
+    git_diff_print_patch(diff->diff, diff_write_cb, &rb_io);
   }
 
   return Qnil;
